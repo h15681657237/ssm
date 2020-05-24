@@ -32,6 +32,7 @@ public class LoginFilter implements Filter {
         urls.add("glyphicon");
         urls.add("/util/verifycode");
         urls.add("/util/getcode");
+        urls.add("favicon.ico");
 
         HttpSession session = request.getSession();
         Object user = session.getAttribute("user");
