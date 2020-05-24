@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+>
+    <!--spring配置-->
+    <!--<context:property-placeholder location="classpath*:jdbc.properties"></context:property-placeholder>-->
+
+        <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+            <property name="locations">
+                <list>
+                    <value>classpath*:jdbc.properties</value>
+                </list>
+            </property>
+        </bean>
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${driverClassName}"></property>
+        <property name="url" value="${url}"></property>
+        <property name="username" value="${user}"></property>
+        <property name="password" value="${password}"></property>
+    </bean>
+    
+    <!--事务通知-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <tx:advice id="advice1" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="find*" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+    <aop:config>
+        <aop:pointcut id="pt1" expression="execution(* com.tao.service.*.*(..))"></aop:pointcut>
+        <aop:advisor advice-ref="advice1" pointcut-ref="pt1"></aop:advisor>
+    </aop:config>
+
+    <context:component-scan base-package="com.tao.service"></context:component-scan>
+    <!--aop通知-->
+    <aop:config>
+        <aop:pointcut id="pt1" expression="execution(* com.tao.service.*.*(..))"></aop:pointcut>
+        <aop:aspect ref="logger">
+            <aop:before method="before" pointcut-ref="pt1"></aop:before>
+        </aop:aspect>
+    </aop:config>
+
+
+    <!--mybatis配置-->
+    <context:component-scan base-package="com.tao.dao"></context:component-scan>
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--<property name="configuration">
+
+        </property>-->
+        <property name="configLocation" value="classpath:mybatis.xml"></property>
+        <property name="dataSource" ref="dataSource"></property>
+        <property name="typeAliasesPackage" value="com.tao.domain"></property>
+        <property name="mapperLocations" value="classpath*:mapper/**/*.xml"></property>
+
+
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <value>
+                            reasonable=true
+                        </value>
+                    </property>
+                </bean>
+            </array>
+
+        </property>
+
+
+    </bean>
+
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg index="0" ref="sqlSessionFactory"></constructor-arg>
+    </bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.tao.dao"></property>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+        <property name="sqlSessionTemplateBeanName" value="sqlSessionTemplate"></property>
+
+    </bean>
+
+
+    <tx:annotation-driven transaction-manager="transactionManager"></tx:annotation-driven>
+    <context:component-scan base-package="com.tao.dao"></context:component-scan>
+
+</beans>
