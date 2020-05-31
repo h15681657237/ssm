@@ -8,10 +8,14 @@ import com.tao.service.userService.UserSservice;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import redis.clients.jedis.Jedis;
 
 import java.util.List;
+import java.util.Set;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:applicationContext.xml")
@@ -29,6 +33,26 @@ public class Tests {
 
     @Autowired
     UserMapper1Impl userMapper2;
+
+    @Autowired
+    JedisConnectionFactory jedisConnectionFactory;
+
+    @Test
+    public void Jedis(){
+        System.out.println(jedisConnectionFactory);
+        Jedis jedis = (Jedis) jedisConnectionFactory.getConnection().getNativeConnection();
+        jedis.set("username","zhangsan");
+        List<String> mylist = jedis.lrange("mylist", 0, -1);
+        if(mylist!=null){
+            for(String list:mylist){
+                System.out.println(list);
+            }
+        }
+        Set<String> keys = jedis.keys("*");
+        for (String key:keys){
+            System.out.println(key);
+        }
+    }
 
     @Test
     public void findAll(){
